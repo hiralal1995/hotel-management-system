@@ -1,164 +1,495 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
-import ttkbootstrap as ttk_bs
+import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
+from tkinter import messagebox
+from datetime import datetime
+
 from database import db
-import config
-from customer import CustomerModule
-from room import RoomModule
-from booking import BookingModule
-from billing import BillingModule
-from employee import EmployeeModule
-from reports import ReportsModule
+
 
 class Dashboard:
-    """Main Dashboard for Hotel Management System"""
-    
-    def __init__(self, root):
-        self.root = root
-        self.root.title(config.APP_TITLE)
-        self.root.geometry(f"{config.WINDOW_WIDTH}x{config.WINDOW_HEIGHT}")
-        
-        # Initialize modules
-        self.customer_module = None
-        self.room_module = None
-        self.booking_module = None
-        self.billing_module = None
-        self.employee_module = None
-        self.reports_module = None
-        
-        self.create_widgets()
-    
-    def create_widgets(self):
-        """Create dashboard widgets"""
-        
-        # Top Frame - Title and Welcome
-        top_frame = ttk_bs.Frame(self.root, bootstyle="primary")
-        top_frame.pack(fill=X, side=TOP)
-        
-        title_label = ttk_bs.Label(
-            top_frame,
-            text=config.APP_TITLE,
-            font=("Arial", 20, "bold"),
-            foreground="white"
-        )
-        title_label.pack(pady=15)
-        
-        # Left Sidebar - Navigation Menu
-        left_frame = ttk_bs.Frame(self.root, width=200, bootstyle="secondary")
-        left_frame.pack(fill=Y, side=LEFT)
-        left_frame.pack_propagate(False)
-        
-        # Menu Title
-        menu_title = ttk_bs.Label(
-            left_frame,
-            text="Menu",
-            font=("Arial", 12, "bold")
-        )
-        menu_title.pack(pady=15)
-        
-        # Menu Buttons
-        buttons_info = [
-            ("Dashboard", self.show_dashboard),
-            ("Customers", self.show_customers),
-            ("Rooms", self.show_rooms),
-            ("Bookings", self.show_bookings),
-            ("Billing", self.show_billing),
-            ("Employees", self.show_employees),
-            ("Reports", self.show_reports),
-            ("Logout", self.logout)
-        ]
-        
-        for btn_text, btn_command in buttons_info:
-            btn = ttk_bs.Button(
-                left_frame,
-                text=btn_text,
-                command=btn_command,
-                width=20,
-                bootstyle="info"
-            )
-            btn.pack(pady=5, padx=10)
-        
-        # Right Frame - Content Area
-        self.content_frame = ttk_bs.Frame(self.root, bootstyle="light")
-        self.content_frame.pack(fill=BOTH, expand=True, side=LEFT)
-        
-        # Show welcome message
-        self.show_dashboard()
-    
-    def clear_content(self):
-        """Clear content frame"""
-        for widget in self.content_frame.winfo_children():
-            widget.destroy()
-    
-    def show_dashboard(self):
-        """Show dashboard welcome screen"""
-        self.clear_content()
-        
-        welcome_frame = ttk_bs.Frame(self.content_frame)
-        welcome_frame.pack(fill=BOTH, expand=True, padx=20, pady=20)
-        
-        welcome_label = ttk_bs.Label(
-            welcome_frame,
-            text="Welcome to Hotel Management System",
-            font=("Arial", 24, "bold")
-        )
-        welcome_label.pack(pady=30)
-        
-        info_text = """
-Select an option from the menu to get started:
 
-• Customers: Manage customer information
-• Rooms: View and manage hotel rooms
-• Bookings: Create and manage room bookings
-• Billing: Generate invoices and payments
-• Employees: Manage employee information
-• Reports: Generate various reports
-        """
-        
-        info_label = ttk_bs.Label(
-            welcome_frame,
-            text=info_text,
-            font=("Arial", 12),
-            justify=LEFT
+    def __init__(self, user):
+
+        self.user = user
+
+        self.window = ttk.Window(
+            themename="flatly"
         )
-        info_label.pack(pady=20, anchor=W)
-    
-    def show_customers(self):
-        """Show customer management"""
-        self.clear_content()
-        self.customer_module = CustomerModule(self.content_frame)
-    
-    def show_rooms(self):
-        """Show room management"""
-        self.clear_content()
-        self.room_module = RoomModule(self.content_frame)
-    
-    def show_bookings(self):
-        """Show booking management"""
-        self.clear_content()
-        self.booking_module = BookingModule(self.content_frame)
-    
-    def show_billing(self):
-        """Show billing management"""
-        self.clear_content()
-        self.billing_module = BillingModule(self.content_frame)
-    
-    def show_employees(self):
-        """Show employee management"""
-        self.clear_content()
-        self.employee_module = EmployeeModule(self.content_frame)
-    
-    def show_reports(self):
-        """Show reports"""
-        self.clear_content()
-        self.reports_module = ReportsModule(self.content_frame)
-    
+
+        self.window.title(
+            "Hotel Management Dashboard"
+        )
+
+        self.window.geometry(
+            "1200x700"
+        )
+
+        self.window.state("zoomed")
+
+
+        # =========================
+        # Sidebar
+        # =========================
+
+        self.sidebar = ttk.Frame(
+            self.window,
+            bootstyle="primary",
+            width=220
+        )
+
+        self.sidebar.pack(
+            side=LEFT,
+            fill=Y
+        )
+
+
+        ttk.Label(
+            self.sidebar,
+            text="HOTEL SYSTEM",
+            font=(
+                "Arial",
+                18,
+                "bold"
+            ),
+            bootstyle="inverse-primary"
+        ).pack(
+            pady=30
+        )
+
+
+        menu_buttons = [
+
+            ("Dashboard", self.home),
+
+            ("Customers", self.open_customer),
+
+            ("Rooms", self.open_rooms),
+
+            ("Bookings", self.open_booking),
+
+            ("Billing", self.open_billing),
+
+            ("Employees", self.open_employee),
+
+            ("Reports", self.open_reports)
+
+        ]
+
+
+        for text, command in menu_buttons:
+
+            ttk.Button(
+
+                self.sidebar,
+
+                text=text,
+
+                width=20,
+
+                bootstyle="light",
+
+                command=command
+
+            ).pack(
+                pady=8,
+                padx=10
+            )
+
+
+        ttk.Button(
+
+            self.sidebar,
+
+            text="Logout",
+
+            width=20,
+
+            bootstyle="danger",
+
+            command=self.logout
+
+        ).pack(
+
+            side=BOTTOM,
+
+            pady=20
+
+        )
+
+
+        # =========================
+        # Main Area
+        # =========================
+
+
+        self.main_frame = ttk.Frame(
+            self.window
+        )
+
+        self.main_frame.pack(
+            expand=True,
+            fill=BOTH,
+            padx=20,
+            pady=20
+        )
+
+
+        self.home()
+
+
+        self.window.mainloop()
+
+
+
+    # =========================
+    # Dashboard Home
+    # =========================
+
+
+    def home(self):
+
+        for widget in self.main_frame.winfo_children():
+
+            widget.destroy()
+
+
+
+        ttk.Label(
+
+            self.main_frame,
+
+            text=f"Welcome, {self.user['username']}",
+
+            font=(
+                "Arial",
+                24,
+                "bold"
+            )
+
+        ).pack(
+            anchor=W
+        )
+
+
+        self.time_label = ttk.Label(
+
+            self.main_frame,
+
+            font=(
+                "Arial",
+                14
+            )
+
+        )
+
+        self.time_label.pack(
+            anchor=W,
+            pady=10
+        )
+
+
+        self.update_time()
+
+
+
+        # Cards
+
+        cards_frame = ttk.Frame(
+
+            self.main_frame
+
+        )
+
+        cards_frame.pack(
+
+            pady=30
+
+        )
+
+
+        rooms = self.get_total_rooms()
+
+        available = self.get_available_rooms()
+
+        customers = self.get_customers()
+
+        bookings = self.get_bookings()
+
+
+
+        self.create_card(
+
+            cards_frame,
+
+            "Total Rooms",
+
+            rooms,
+
+            0
+
+        )
+
+
+        self.create_card(
+
+            cards_frame,
+
+            "Available Rooms",
+
+            available,
+
+            1
+
+        )
+
+
+        self.create_card(
+
+            cards_frame,
+
+            "Customers",
+
+            customers,
+
+            2
+
+        )
+
+
+        self.create_card(
+
+            cards_frame,
+
+            "Bookings",
+
+            bookings,
+
+            3
+
+        )
+
+
+
+    # =========================
+    # Dashboard Cards
+    # =========================
+
+
+    def create_card(
+            self,
+            parent,
+            title,
+            value,
+            column):
+
+
+        frame = ttk.Frame(
+
+            parent,
+
+            bootstyle="info",
+
+            width=220,
+
+            height=130
+
+        )
+
+        frame.grid(
+
+            row=0,
+
+            column=column,
+
+            padx=15
+
+        )
+
+
+        ttk.Label(
+
+            frame,
+
+            text=title,
+
+            font=(
+
+                "Arial",
+
+                14,
+
+                "bold"
+
+            )
+
+        ).pack(
+
+            pady=15
+
+        )
+
+
+        ttk.Label(
+
+            frame,
+
+            text=str(value),
+
+            font=(
+
+                "Arial",
+
+                25,
+
+                "bold"
+
+            )
+
+        ).pack()
+
+
+
+    # =========================
+    # Database Statistics
+    # =========================
+
+
+    def get_total_rooms(self):
+
+        db.execute(
+
+            "SELECT COUNT(*) AS total FROM rooms"
+
+        )
+
+        return db.fetchone()["total"]
+
+
+
+    def get_available_rooms(self):
+
+        db.execute(
+
+            """
+            SELECT COUNT(*) AS total
+            FROM rooms
+            WHERE status='Available'
+            """
+
+        )
+
+        return db.fetchone()["total"]
+
+
+
+    def get_customers(self):
+
+        db.execute(
+
+            "SELECT COUNT(*) AS total FROM customers"
+
+        )
+
+        return db.fetchone()["total"]
+
+
+
+    def get_bookings(self):
+
+        db.execute(
+
+            "SELECT COUNT(*) AS total FROM bookings"
+
+        )
+
+        return db.fetchone()["total"]
+
+
+
+    # =========================
+    # Clock
+    # =========================
+
+
+    def update_time(self):
+
+        now = datetime.now().strftime(
+
+            "%d-%m-%Y   %I:%M:%S %p"
+
+        )
+
+        self.time_label.config(
+
+            text=now
+
+        )
+
+        self.time_label.after(
+
+            1000,
+
+            self.update_time
+
+        )
+
+
+
+    # =========================
+    # Module Connectors
+    # =========================
+
+
+    def open_customer(self):
+
+        from customer import Customer
+
+        Customer()
+
+
+    def open_rooms(self):
+
+        from room import Room
+
+        Room()
+
+
+    def open_booking(self):
+
+        from booking import Booking
+
+        Booking()
+
+
+    def open_billing(self):
+
+        messagebox.showinfo(
+            "Billing",
+            "Billing module will be connected soon"
+        )
+
+
+    def open_employee(self):
+
+        messagebox.showinfo(
+            "Employees",
+            "Employee module will be connected soon"
+        )
+
+
+    def open_reports(self):
+
+        messagebox.showinfo(
+            "Reports",
+            "Reports module will be connected soon"
+        )
+
+
+
     def logout(self):
-        """Logout and return to login"""
-        db.disconnect()
-        self.root.destroy()
-        
-        # Restart login
-        from login import main
-        main()
+
+        self.window.destroy()
+
+        from login import Login
+
+        Login()
